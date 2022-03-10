@@ -10,16 +10,17 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Repository
-public class PostRepositoryImpl implements PostRepository {
+public class PostRepositoryImpl {
     private final ConcurrentHashMap<Long, Post> posts = new ConcurrentHashMap<>();
     private long newId = 1L;
+
 
     public List<Post> all() {
         return new ArrayList<>(posts.values());
     }
 
     public Optional<Post> getById(long id) {
-        return Optional.of(posts.get(id));
+        return Optional.ofNullable(posts.get(id));
     }
 
     public Post save(Post post) {
@@ -30,13 +31,52 @@ public class PostRepositoryImpl implements PostRepository {
         } else if (post.getId() < newId && post.getId() > 0) {
             posts.replace(post.getId(), post);
         } else {
-            throw new NotFoundException("Пост не найден");
+            throw new NotFoundException("Post not found");
         }
-        return post;
+        if (!post.isRemoved()) {
+            return post;
+        } else {
+            throw new NotFoundException("Post has been removed");
+        }
     }
 
-    public Optional<Post> removeById(long id) {
-        return Optional.of(posts.remove(id));
+    public void removeById(long id) {
+        posts.get(id).setRemoved(true);
     }
+
+    //    public List<Post> all() {
+//        return new ArrayList<>(posts.values());
+//    }
+//
+//    public Optional<Post> getById(long id) {
+//        if(posts.containsKey(id)){
+//            return Optional.of(posts.get(id));
+//        } else{
+//            throw new NotFoundException("Post not found");
+//        }
+//    }
+//
+//    public Post save(Post post) {
+//        if (post.getId() == 0) {
+//            post.setId(newId);
+//            posts.putIfAbsent(newId, post);
+//            newId++;
+//            return post;
+//        } else if (post.getId() < newId && post.getId() > 0 && !post.isRemoved()) {
+//            posts.replace(post.getId(), post);
+//            return post;
+//        } else {
+//            throw new NotFoundException("Post not found");
+//        }
+//    }
+//
+//    public Optional<Post> removeById(long id) {
+//        if(posts.containsKey(id)){
+//            posts.get(id).setRemoved(true);
+//            return Optional.of(posts.get(id));
+//        } else{
+//            throw new NotFoundException("Post not found");
+//        }
+//    }
 }
 
